@@ -1,6 +1,8 @@
 #ifndef POSITION_H
 #define POSITION_H
 
+#include <glm/glm.hpp>
+
 class Position
 {
 public:
@@ -16,6 +18,8 @@ public:
     float getX();
     float getY();
     float getZ();
+
+    glm::vec3 toVec3() const;
 
 private:
     float x;

@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
+#include <glm/glm.hpp>
 
 class Block
 {
@@ -13,7 +14,7 @@ public:
     ~Block();
 
     void update();
-    void render();
+    void render(const glm::mat4 &viewMatrix);
     Position getPosition();
 
 private:

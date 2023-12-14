@@ -6,6 +6,7 @@
  */
 
 #include "Position.h"
+#include <glm/glm.hpp>
 
 Position::Position(const float &x, const float &y, const float &z)
     : x(x), y(y), z(z)
@@ -47,4 +48,9 @@ float Position::getY()
 float Position::getZ()
 {
     return z;
+}
+
+glm::vec3 Position::toVec3() const
+{
+    return glm::vec3(x, y, z);
 }

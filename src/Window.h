@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <unistd.h>
+#include <glm/glm.hpp>
 #include "Block.h"
 #include <vector>
 
@@ -30,6 +31,10 @@ private:
     int TARGET_FPS;
 
     Block *block;
+
+    glm::vec3 cameraPosition;
+    float cameraYaw;
+    float cameraPitch;
 };
 
 #endif // WINDOW_H

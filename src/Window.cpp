@@ -11,10 +11,11 @@
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include "Block.h"
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
 Spearstake::Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps)
-    : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps)
+    : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(0.0f, 0.0f, 0.0f), cameraYaw(0.0f), cameraPitch(0.0f)
 {
     // Create blocks
     float blockDistance = 20.0f; // Distance of the block from the camera
@@ -83,7 +84,27 @@ void Spearstake::init()
 
 void Spearstake::update()
 {
-    // Update game logic here
+    // Check for keyboard input
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        // Move camera forward
+        cameraPosition += glm::vec3(0.0f, 0.0f, -0.1f);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        // Move camera backward
+        cameraPosition += glm::vec3(0.0f, 0.0f, 0.1f);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        // Rotate camera left
+        cameraYaw -= 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        // Rotate camera right
+        cameraYaw += 0.1f;
+    }
 }
 
 void Spearstake::render()
@@ -106,8 +127,15 @@ void Spearstake::render()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Calculate the rotation matrix based on camera's yaw and pitch angles
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), cameraYaw, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrix = glm::rotate(rotationMatrix, cameraPitch, glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // Calculate the view matrix by combining the rotation matrix and camera position
+    glm::mat4 viewMatrix = glm::translate(glm::mat4(1.0f), -cameraPosition) * rotationMatrix;
+
     // Render game objects here
-    block->render();
+    block->render(viewMatrix);
 
     // Swap buffers
     glfwSwapBuffers(window);

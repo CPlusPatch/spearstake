@@ -10,6 +10,8 @@
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
 #include <unistd.h>
+#include <vector>
+#include <glm/ext/matrix_transform.hpp>
 
 Block::Block(const Position &position, const char *texture)
     : position(position)
@@ -54,18 +56,17 @@ void Block::update()
     // Update block logic here
 }
 
-void Block::render()
+void Block::render(const glm::mat4 &viewMatrix)
 {
     // Calculate the size of a single block
     float blockSize = 100.0f; // Set the size of a single block here
 
-    // Enable texture functionality
-    // glEnable(GL_TEXTURE_2D);
+    // Calculate the model matrix for the block
+    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), position.toVec3() * blockSize);
 
-    // Bind the texture
-    // glBindTexture(GL_TEXTURE_2D, textureID);
+    // Combine the model matrix and the view matrix to get the final transformation matrix
+    glm::mat4 transformationMatrix = viewMatrix * modelMatrix;
 
-    // Calculate the vertices of the cube based on the world position and block size
     GLfloat vertices[] = {
         position.getX() * blockSize, position.getY() * blockSize, position.getZ() * blockSize,                   // Front top left
         (position.getX() + 1) * blockSize, position.getY() * blockSize, position.getZ() * blockSize,             // Front top right
@@ -89,43 +90,25 @@ void Block::render()
         1.0f, 1.0f, 0.0f  // Back bottom left
     };
 
-    // Render the cube
+    // Transform the vertices using the transformation matrix
+    std::vector<GLfloat> transformedVertices;
+    for (int i = 0; i < 24; i++)
+    {
+        glm::vec4 vertex(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2], 1.0f);
+        glm::vec4 transformedVertex = transformationMatrix * vertex;
+        transformedVertices.push_back(transformedVertex.x);
+        transformedVertices.push_back(transformedVertex.y);
+        transformedVertices.push_back(transformedVertex.z);
+    }
+
+    // Render the transformed cube
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices);
+    glVertexPointer(3, GL_FLOAT, 0, transformedVertices.data());
     glColorPointer(3, GL_FLOAT, 0, colors);
     glDrawArrays(GL_QUADS, 0, 24);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
-
-    /* GLfloat texCoords[] = {
-        // Front face
-        0.0f, 0.0f, // Front top left
-        1.0f, 0.0f, // Front top right
-        1.0f, 1.0f, // Front bottom right
-        0.0f, 1.0f, // Front bottom left
-
-        // Back face
-        0.0f, 0.0f, // Back top left
-        1.0f, 0.0f, // Back top right
-        1.0f, 1.0f, // Back bottom right
-        0.0f, 1.0f  // Back bottom left
-    };
-
-    // Render the cube
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices);
-    glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
-    glDrawArrays(GL_QUADS, 0, 24);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    // Unbind the texture
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Disable texture functionality
-    glDisable(GL_TEXTURE_2D); */
 }
 
 Position Block::getPosition()
