@@ -5,17 +5,16 @@
  * @details This file contains the class for the Spearstake window renderer
  */
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_timer.h>
 #include <iostream>
-#include <utility>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <unistd.h>
 
 class Spearstake
 {
 public:
     Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps = 60)
-        : isRunning(false), window(nullptr), renderer(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps)
+        : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps)
     {
     }
 
@@ -39,28 +38,35 @@ public:
 private:
     void init()
     {
-        // Initialize SDL
-        if (SDL_Init(SDL_INIT_VIDEO) != 0)
+        // Initialize GLFW
+        if (!glfwInit())
         {
-            std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+            std::cerr << "Failed to initialize GLFW" << std::endl;
             isRunning = false;
             return;
         }
 
-        // Create SDL window
-        window = SDL_CreateWindow(WINDOW_TITLE.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_DIMENSIONS.first, WINDOW_DIMENSIONS.second, SDL_WINDOW_SHOWN);
-        if (window == nullptr)
+        // Create GLFW window
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        window = glfwCreateWindow(WINDOW_DIMENSIONS.first, WINDOW_DIMENSIONS.second, WINDOW_TITLE.c_str(), nullptr, nullptr);
+        if (!window)
         {
-            std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+            std::cerr << "Failed to create GLFW window" << std::endl;
+            glfwTerminate();
             isRunning = false;
             return;
         }
 
-        // Create SDL renderer
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-        if (renderer == nullptr)
+        glfwMakeContextCurrent(window);
+
+        // Initialize GLEW
+        if (glewInit() != GLEW_OK)
         {
-            std::cerr << "Failed to create SDL renderer: " << SDL_GetError() << std::endl;
+            std::cerr << "Failed to initialize GLEW" << std::endl;
+            glfwTerminate();
             isRunning = false;
             return;
         }
@@ -76,39 +82,38 @@ private:
     void render()
     {
         // Calculate the time it takes to render a frame
-        static Uint32 previousFrameTime = SDL_GetTicks();
-        Uint32 currentFrameTime = SDL_GetTicks();
-        Uint32 frameTime = currentFrameTime - previousFrameTime;
+        static double previousFrameTime = glfwGetTime();
+        double currentFrameTime = glfwGetTime();
+        double frameTime = currentFrameTime - previousFrameTime;
         previousFrameTime = currentFrameTime;
 
         // Limit the frame rate if necessary
-        const Uint32 frameDelay = 1000 / TARGET_FPS;
+        const double frameDelay = 1.0 / TARGET_FPS;
         if (frameTime < frameDelay)
         {
-            SDL_Delay(frameDelay - frameTime);
+            double sleepTime = frameDelay - frameTime;
+            usleep(sleepTime * 1000000);
         }
 
-        // Clear the renderer
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
+        // Clear the screen
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         // Render game objects here
 
-        // Present the renderer
-        SDL_RenderPresent(renderer);
+        // Swap buffers
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     void clean()
     {
-        // Cleanup SDL resources
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
+        // Cleanup GLFW resources
+        glfwTerminate();
     }
 
     bool isRunning;
-    SDL_Window *window;
-    SDL_Renderer *renderer;
+    GLFWwindow *window;
     std::pair<int, int> WINDOW_DIMENSIONS;
     std::string WINDOW_TITLE;
     std::string WINDOW_ICON;
