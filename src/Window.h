@@ -35,6 +35,8 @@ private:
     glm::vec3 cameraPosition;
     float cameraYaw;
     float cameraPitch;
+
+    GLuint programID;
 };
 
 #endif // WINDOW_H

@@ -13,9 +13,10 @@
 #include "Block.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
+#include "Shaders.h"
 
 Spearstake::Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps)
-    : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(0.0f, 0.0f, 0.0f), cameraYaw(0.0f), cameraPitch(0.0f)
+    : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(4.0f, 3.0f, 3.0f), cameraYaw(0.0f), cameraPitch(0.0f)
 {
     // Create blocks
     float blockDistance = 20.0f; // Distance of the block from the camera
@@ -56,8 +57,6 @@ void Spearstake::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     window = glfwCreateWindow(WINDOW_DIMENSIONS.first, WINDOW_DIMENSIONS.second, WINDOW_TITLE.c_str(), nullptr, nullptr);
     if (!window)
@@ -69,6 +68,7 @@ void Spearstake::init()
     }
 
     glfwMakeContextCurrent(window);
+    glewExperimental = true; // Needed in core profile
 
     // Initialize GLEW
     if (glewInit() != GLEW_OK)
@@ -83,13 +83,25 @@ void Spearstake::init()
 
     // Set the viewport
     glViewport(0, 0, WINDOW_DIMENSIONS.first, WINDOW_DIMENSIONS.second);
+    glMatrixMode(GL_PROJECTION_MATRIX);
+    glLoadIdentity();
+    gluPerspective(45, WINDOW_DIMENSIONS.first / WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
 
     // Set the clear color
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    GLuint VertexArrayID;
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+
+    programID = LoadShaders("./shaders/vertex.vert", "./shaders/fragment.frag");
     isRunning = true;
 }
 
+/**
+ * @brief Updates the window
+ * @details Listens for keyboard input and updates the window accordingly
+ */
 void Spearstake::update()
 {
     // Check for keyboard input
@@ -115,8 +127,14 @@ void Spearstake::update()
     }
 }
 
+/**
+ * @brief Renders the window
+ * @details Renders all elements on window using OpenGL
+ */
 void Spearstake::render()
 {
+    glUseProgram(programID);
+
     // Calculate the time it takes to render a frame
     static double previousFrameTime = glfwGetTime();
     double currentFrameTime = glfwGetTime();
@@ -132,134 +150,158 @@ void Spearstake::render()
     }
 
     // Clear the screen
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Calculate the rotation matrix based on camera's yaw and pitch angles
-    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), cameraYaw, glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, cameraPitch, glm::vec3(1.0f, 0.0f, 0.0f));
+    // Projection matrix
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), (float)WINDOW_DIMENSIONS.first / (float)WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
 
-    // Calculate the view matrix by combining the rotation matrix and camera position
-    glm::mat4 viewMatrix = glm::translate(glm::mat4(1.0f), -cameraPosition) * rotationMatrix;
+    // View matrix
+    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0, 1.0f, 0.0f));
 
-    // Render game objects here
-    // block->render(viewMatrix);
+    // Model matrix
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
-    // Render yellow cube
-    GLfloat vertices[] = {
-        // Front face
-        -0.5f, -0.5f, -0.5f, // Vertex 0
-        0.5f, -0.5f, -0.5f,  // Vertex 1
-        0.5f, 0.5f, -0.5f,   // Vertex 2
-        -0.5f, -0.5f, -0.5f, // Vertex 0
-        0.5f, 0.5f, -0.5f,   // Vertex 2
-        -0.5f, 0.5f, -0.5f,  // Vertex 3
+    // Model-view-projection matrix
+    glm::mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
 
-        // Back face
-        -0.5f, -0.5f, 0.5f, // Vertex 4
-        0.5f, -0.5f, 0.5f,  // Vertex 5
-        0.5f, 0.5f, 0.5f,   // Vertex 6
-        -0.5f, -0.5f, 0.5f, // Vertex 4
-        0.5f, 0.5f, 0.5f,   // Vertex 6
-        -0.5f, 0.5f, 0.5f,  // Vertex 7
+    GLuint mvpMatrixID = glGetUniformLocation(programID, "MVP");
+    glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
 
-        // Left face
-        -0.5f, -0.5f, 0.5f,  // Vertex 8
-        -0.5f, -0.5f, -0.5f, // Vertex 9
-        -0.5f, 0.5f, -0.5f,  // Vertex 10
-        -0.5f, -0.5f, 0.5f,  // Vertex 8
-        -0.5f, 0.5f, -0.5f,  // Vertex 10
-        -0.5f, 0.5f, 0.5f,   // Vertex 11
-
-        // Right face
-        0.5f, -0.5f, 0.5f,  // Vertex 12
-        0.5f, -0.5f, -0.5f, // Vertex 13
-        0.5f, 0.5f, -0.5f,  // Vertex 14
-        0.5f, -0.5f, 0.5f,  // Vertex 12
-        0.5f, 0.5f, -0.5f,  // Vertex 14
-        0.5f, 0.5f, 0.5f,   // Vertex 15
-
-        // Top face
-        -0.5f, 0.5f, -0.5f, // Vertex 16
-        0.5f, 0.5f, -0.5f,  // Vertex 17
-        0.5f, 0.5f, 0.5f,   // Vertex 18
-        -0.5f, 0.5f, -0.5f, // Vertex 16
-        0.5f, 0.5f, 0.5f,   // Vertex 18
-        -0.5f, 0.5f, 0.5f,  // Vertex 19
-
-        // Bottom face
-        -0.5f, -0.5f, -0.5f, // Vertex 20
-        0.5f, -0.5f, -0.5f,  // Vertex 21
-        0.5f, -0.5f, 0.5f,   // Vertex 22
-        -0.5f, -0.5f, -0.5f, // Vertex 20
-        0.5f, -0.5f, 0.5f,   // Vertex 22
-        -0.5f, -0.5f, 0.5f   // Vertex 23
+    // Draw a triangle
+    static const GLfloat g_vertex_buffer_data[] = {
+        -1.0f, -1.0f, 0.0f, // Vertex 1
+        1.0f, -1.0f, 0.0f,  // Vertex 2
+        0.0f, 1.0f, 0.0f    // Vertex 3
     };
 
-    // Set the color to solid yellow
-    GLfloat colors[] = {
-        1.0f, 1.0f, 0.0f, // Vertex 0
-        1.0f, 1.0f, 0.0f, // Vertex 1
-        1.0f, 1.0f, 0.0f, // Vertex 2
-        1.0f, 1.0f, 0.0f, // Vertex 3
-        1.0f, 1.0f, 0.0f, // Vertex 4
-        1.0f, 1.0f, 0.0f, // Vertex 5
-        1.0f, 1.0f, 0.0f, // Vertex 6
-        1.0f, 1.0f, 0.0f, // Vertex 7
-        1.0f, 1.0f, 0.0f, // Vertex 8
-        1.0f, 1.0f, 0.0f, // Vertex 9
-        1.0f, 1.0f, 0.0f, // Vertex 10
-        1.0f, 1.0f, 0.0f, // Vertex 11
-        1.0f, 1.0f, 0.0f, // Vertex 12
-        1.0f, 1.0f, 0.0f, // Vertex 13
-        1.0f, 1.0f, 0.0f, // Vertex 14
-        1.0f, 1.0f, 0.0f, // Vertex 15
-        1.0f, 1.0f, 0.0f, // Vertex 16
-        1.0f, 1.0f, 0.0f, // Vertex 17
-        1.0f, 1.0f, 0.0f, // Vertex 18
-        1.0f, 1.0f, 0.0f, // Vertex 19
-        1.0f, 1.0f, 0.0f, // Vertex 20
-        1.0f, 1.0f, 0.0f, // Vertex 21
-        1.0f, 1.0f, 0.0f, // Vertex 22
-        1.0f, 1.0f, 0.0f  // Vertex 23
-    };
+    GLuint vertexBuffer;
 
-    GLuint indices[] = {
-        0, 1, 2,    // Front face
-        0, 2, 3,    // Front face
-        4, 5, 6,    // Back face
-        4, 6, 7,    // Back face
-        8, 9, 10,   // Left face
-        8, 10, 11,  // Left face
-        12, 13, 14, // Right face
-        12, 14, 15, // Right face
-        16, 17, 18, // Top face
-        16, 18, 19, // Top face
-        20, 21, 22, // Bottom face
-        20, 22, 23  // Bottom face
-    };
+    // Generate a buffer
+    glGenBuffers(1, &vertexBuffer);
 
-    // Transform the vertices using the transformation matrix
-    std::vector<GLfloat> transformedVertices;
-    for (int i = 0; i < 24; i++)
-    {
-        glm::vec4 vertex(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2], 1.0f);
-        glm::vec4 transformedVertex = viewMatrix * vertex;
-        transformedVertices.push_back(transformedVertex.x);
-        transformedVertices.push_back(transformedVertex.y);
-        transformedVertices.push_back(transformedVertex.z);
-    }
+    // Bind the buffer
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 
-    // Render the transformed cube
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, transformedVertices.data());
-    glColorPointer(3, GL_FLOAT, 0, colors);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, indices);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    // Send the data
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    // Print rotation
-    std::cout << "Camera yaw: " << cameraYaw << std::endl;
+    // Draw the triangle
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDisableVertexAttribArray(0);
+    /* // Render yellow cube
+GLfloat vertices[] = {
+    // Front face
+    -0.5f, -0.5f, -0.5f, // Vertex 0
+    0.5f, -0.5f, -0.5f,  // Vertex 1
+    0.5f, 0.5f, -0.5f,   // Vertex 2
+    -0.5f, -0.5f, -0.5f, // Vertex 0
+    0.5f, 0.5f, -0.5f,   // Vertex 2
+    -0.5f, 0.5f, -0.5f,  // Vertex 3
 
+    // Back face
+    -0.5f, -0.5f, 0.5f, // Vertex 4
+    0.5f, -0.5f, 0.5f,  // Vertex 5
+    0.5f, 0.5f, 0.5f,   // Vertex 6
+    -0.5f, -0.5f, 0.5f, // Vertex 4
+    0.5f, 0.5f, 0.5f,   // Vertex 6
+    -0.5f, 0.5f, 0.5f,  // Vertex 7
+
+    // Left face
+    -0.5f, -0.5f, 0.5f,  // Vertex 8
+    -0.5f, -0.5f, -0.5f, // Vertex 9
+    -0.5f, 0.5f, -0.5f,  // Vertex 10
+    -0.5f, -0.5f, 0.5f,  // Vertex 8
+    -0.5f, 0.5f, -0.5f,  // Vertex 10
+    -0.5f, 0.5f, 0.5f,   // Vertex 11
+
+    // Right face
+    0.5f, -0.5f, 0.5f,  // Vertex 12
+    0.5f, -0.5f, -0.5f, // Vertex 13
+    0.5f, 0.5f, -0.5f,  // Vertex 14
+    0.5f, -0.5f, 0.5f,  // Vertex 12
+    0.5f, 0.5f, -0.5f,  // Vertex 14
+    0.5f, 0.5f, 0.5f,   // Vertex 15
+
+    // Top face
+    -0.5f, 0.5f, -0.5f, // Vertex 16
+    0.5f, 0.5f, -0.5f,  // Vertex 17
+    0.5f, 0.5f, 0.5f,   // Vertex 18
+    -0.5f, 0.5f, -0.5f, // Vertex 16
+    0.5f, 0.5f, 0.5f,   // Vertex 18
+    -0.5f, 0.5f, 0.5f,  // Vertex 19
+
+    // Bottom face
+    -0.5f, -0.5f, -0.5f, // Vertex 20
+    0.5f, -0.5f, -0.5f,  // Vertex 21
+    0.5f, -0.5f, 0.5f,   // Vertex 22
+    -0.5f, -0.5f, -0.5f, // Vertex 20
+    0.5f, -0.5f, 0.5f,   // Vertex 22
+    -0.5f, -0.5f, 0.5f   // Vertex 23
+};
+
+// Random colors
+GLfloat colors[] = {
+    1.0f, 0.0f, 0.0f, // Front face
+    0.0f, 1.0f, 0.0f, // Front face
+    0.0f, 0.0f, 1.0f, // Front face
+    1.0f, 0.0f, 0.0f, // Front face
+    0.0f, 0.0f, 1.0f, // Front face
+    1.0f, 0.0f, 1.0f, // Front face
+
+    1.0f, 0.0f, 0.0f, // Back face
+    0.0f, 1.0f, 0.0f, // Back face
+    0.0f, 0.0f, 1.0f, // Back face
+    1.0f, 0.0f, 0.0f, // Back face
+    0.0f, 0.0f, 1.0f, // Back face
+    1.0f, 0.0f, 1.0f, // Back face
+
+    1.0f, 0.0f, 0.0f, // Left face
+    0.0f, 1.0f, 0.0f, // Left face
+    0.0f, 0.0f, 1.0f, // Left face
+    1.0f, 0.0f, 0.0f, // Left face
+    0.0f, 0.0f, 1.0f, // Left face
+    1.0f, 0.0f, 1.0f, // Left face
+
+    1.0f, 0.0f, 0.0f, // Right face
+    0.0f, 1.0f, 0.0f, // Right face
+    0.0f, 0.0f, 1.0f, // Right face
+    1.0f, 0.0f, 0.0f, // Right face
+    0.0f, 0.0f, 1.0f, // Right face
+    1.0f, 0.0f, 1.0f, // Right face
+
+    1.0f, 0.0f, 0.0f, // Top face
+    0.0f, 1.0f, 0.0f, // Top face
+    0.0f, 0.0f, 1.0f, // Top face
+    1.0f, 0.0f, 0.0f, // Top face
+    0.0f, 0.0f, 1.0f, // Top face
+    1.0f, 0.0f, 1.0f, // Top face
+
+    1.0f, 0.0f, 0.0f, // Bottom face
+    0.0f, 1.0f, 0.0f, // Bottom face
+    0.0f, 0.0f, 1.0f, // Bottom face
+    1.0f, 0.0f, 0.0f, // Bottom face
+    0.0f, 0.0f, 1.0f, // Bottom face
+    1.0f, 0.0f, 1.0f  // Bottom face
+};
+
+GLuint indices[] = {
+    0, 1, 2,    // Front face
+    0, 2, 3,    // Front face
+    4, 5, 6,    // Back face
+    4, 6, 7,    // Back face
+    8, 9, 10,   // Left face
+    8, 10, 11,  // Left face
+    12, 13, 14, // Right face
+    12, 14, 15, // Right face
+    16, 17, 18, // Top face
+    16, 18, 19, // Top face
+    20, 21, 22, // Bottom face
+    20, 22, 23  // Bottom face
+};
+*/
     // Swap buffers
     glfwSwapBuffers(window);
     glfwPollEvents();

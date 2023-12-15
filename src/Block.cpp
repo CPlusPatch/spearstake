@@ -17,7 +17,7 @@ Block::Block(const Position &position, const char *texture)
     : position(position)
 {
     // Check if texture exists at path, if not, print error message and exit
-    if (access(texture, F_OK) == -1)
+    /* if (access(texture, F_OK) == -1)
     {
         std::cerr << "Texture " << texture << " does not exist" << std::endl;
         exit(1);
@@ -43,7 +43,7 @@ Block::Block(const Position &position, const char *texture)
 
     // Use the texture in your rendering pipeline
     // glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID); */
 }
 
 Block::~Block()
