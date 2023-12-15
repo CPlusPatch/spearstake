@@ -37,6 +37,8 @@ private:
     float cameraPitch;
 
     GLuint programID;
+    GLuint mvpMatrixID;
+    glm::mat4 mvpMatrix;
 };
 
 #endif // WINDOW_H

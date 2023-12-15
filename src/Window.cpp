@@ -11,6 +11,7 @@
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include "Block.hpp"
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include "Shaders.hpp"
@@ -69,8 +70,10 @@ void Spearstake::init()
     std::cout << "Initializing window" << std::endl;
 
     // Create GLFW window
+    glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // For Mac OS X
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(WINDOW_DIMENSIONS.first, WINDOW_DIMENSIONS.second, WINDOW_TITLE.c_str(), nullptr, nullptr);
@@ -110,6 +113,20 @@ void Spearstake::init()
     glBindVertexArray(VertexArrayID);
 
     programID = LoadShaders("./shaders/vertex.vert", "./shaders/fragment.frag");
+
+    // Projection matrix
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), (float)WINDOW_DIMENSIONS.first / (float)WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
+
+    // View matrix
+    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0f, 0.0f));
+
+    // Model matrix
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // Model-view-projection matrix
+    mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
+
+    mvpMatrixID = glGetUniformLocation(programID, "MVP");
     isRunning = true;
 }
 
@@ -140,6 +157,13 @@ void Spearstake::update()
         // Rotate camera right
         cameraYaw += 1.0f;
     }
+
+    // Handle escape key
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        // Close the window
+        isRunning = false;
+    }
 }
 
 /**
@@ -148,7 +172,6 @@ void Spearstake::update()
  */
 void Spearstake::render()
 {
-    glUseProgram(programID);
 
     // Calculate the time it takes to render a frame
     static double previousFrameTime = glfwGetTime();
@@ -164,25 +187,6 @@ void Spearstake::render()
         usleep(sleepTime * 1000000);
     }
 
-    // Clear the screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Projection matrix
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), (float)WINDOW_DIMENSIONS.first / (float)WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
-
-    // View matrix
-    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0, 1.0f, 0.0f));
-
-    // Model matrix
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    // Model-view-projection matrix
-    glm::mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
-
-    GLuint mvpMatrixID = glGetUniformLocation(programID, "MVP");
-    glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
-
-    // Draw a triangle
     static const GLfloat g_vertex_buffer_data[] = {
         -1.0f, -1.0f, 0.0f, // Vertex 1
         1.0f, -1.0f, 0.0f,  // Vertex 2
@@ -199,6 +203,13 @@ void Spearstake::render()
 
     // Send the data
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(programID);
+
+    glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvpMatrix[0][0]); // Draw a triangle
 
     // Draw the triangle
     glEnableVertexAttribArray(0);
@@ -324,6 +335,7 @@ GLuint indices[] = {
 
 void Spearstake::clean()
 {
+    glDeleteProgram(programID);
     // Cleanup GLFW resources
     glfwTerminate();
 }
