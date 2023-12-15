@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 in vec2 UV;
 out vec3 color;
 uniform sampler2D myTextureSampler;

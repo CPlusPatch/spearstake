@@ -10,7 +10,7 @@
 class Block
 {
 public:
-    Block(const Position &position, const char *texture, const GLuint programID);
+    Block(const Position &position, const char *texturePath, const GLuint programID);
     ~Block();
 
     void update();

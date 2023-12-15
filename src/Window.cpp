@@ -85,8 +85,8 @@ void Spearstake::init()
 
     // Create GLFW window
     glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // For Mac OS X
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -111,17 +111,17 @@ void Spearstake::init()
         return;
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    // Print OpenGL version
+    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-    // Set the viewport
-    glViewport(0, 0, WINDOW_DIMENSIONS.first, WINDOW_DIMENSIONS.second);
-    glMatrixMode(GL_PROJECTION_MATRIX);
-    glLoadIdentity();
-    gluPerspective(45, WINDOW_DIMENSIONS.first / WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
+    // Context
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     // Set the clear color
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
@@ -144,7 +144,7 @@ void Spearstake::init()
 
     // Create blocks
     blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
-    blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
+    // blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
     isRunning = true;
 }
 
@@ -190,7 +190,6 @@ void Spearstake::update()
  */
 void Spearstake::render()
 {
-
     // Calculate the time it takes to render a frame
     static double previousFrameTime = glfwGetTime();
     double currentFrameTime = glfwGetTime();
@@ -221,6 +220,10 @@ void Spearstake::render()
     // Swap buffers
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+    // Clear all errors
+    while (glGetError() != GL_NO_ERROR)
+        ;
 }
 
 void Spearstake::clean()

@@ -22,17 +22,17 @@
  * @param programID The ID of the shader program
  * @details This constructor initializes the block with the given position and texture
  */
-Block::Block(const Position &position, const char *texture, const GLuint programID) : position(position), programID(programID)
+Block::Block(const Position &position, const char *texturePath, const GLuint programID) : position(position), programID(programID)
 {
     // Check if texture exists at path, if not, print error message and exit
-    if (access(texture, F_OK) == -1)
+    if (access(texturePath, F_OK) == -1)
     {
-        std::cerr << "Texture " << texture << " does not exist" << std::endl;
+        std::cerr << "Texture " << texturePath << " does not exist" << std::endl;
         exit(1);
     }
 
     // Set texture parameters
-    this->texture = loadDDS(texture);
+    this->texture = loadDDS(texturePath);
 
     // Load texture
     this->textureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -181,12 +181,19 @@ void Block::update()
 
 void Block::render(const glm::mat4 &mvpMatrix)
 {
-
     // Bind our texture in Texture Unit 0
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, this->texture);
     // Set our "myTextureSampler" sampler to use Texture Unit 0
     glUniform1i(textureID, 0);
+
+    // Check for errorss
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL error: " << error << std::endl;
+        std::cerr << "Details: " << gluErrorString(error) << std::endl;
+    }
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
