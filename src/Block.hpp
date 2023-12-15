@@ -27,7 +27,9 @@ private:
     GLuint texture;
     GLuint vertexBuffer;
     GLuint texCoordBuffer;
-    GLfloat vertices[36 * 3];
+    GLuint indexBuffer;
+    GLfloat vertices[8 * 3];
+    GLint indices[36];
     GLfloat texCoords[36 * 2];
 };
 

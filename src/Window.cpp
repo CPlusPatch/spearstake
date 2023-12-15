@@ -76,6 +76,9 @@ void Spearstake::run()
             usleep(sleepTime * 1000000);
         }
 
+        // Print ms/frame
+        std::cout << "Frame time: " << frameTime * 1000 << "ms" << std::endl;
+
         update(frameTime);
         render();
     }
@@ -142,6 +145,9 @@ void Spearstake::init()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
+    // Cull triangles which normal is not towards the camera
+    // glEnable(GL_CULL_FACE);
+
     // Mouse scroll callback
     glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
                           {
@@ -199,7 +205,7 @@ void Spearstake::init()
 void Spearstake::update(double deltaTime)
 {
     float speed = 3.0f;
-    float mouseSpeed = 1.0f;
+    float mouseSpeed = 0.7f;
 
     // Get mouse position
     double mouseX, mouseY;
@@ -209,8 +215,21 @@ void Spearstake::update(double deltaTime)
     glfwSetCursorPos(window, WINDOW_DIMENSIONS.first / 2, WINDOW_DIMENSIONS.second / 2);
 
     // Compute new orientation
-    cameraYaw -= mouseSpeed * (float)deltaTime * float(WINDOW_DIMENSIONS.first / 2 - mouseX); // Invert yaw
+    cameraYaw += mouseSpeed * (float)deltaTime * float(WINDOW_DIMENSIONS.first / 2 - mouseX); // Invert yaw
     cameraPitch += mouseSpeed * (float)deltaTime * float(WINDOW_DIMENSIONS.second / 2 - mouseY);
+
+    // Prevent camera from rolling
+    const float halfPi = 3.14f / 2.0f;
+    if (cameraPitch > halfPi)
+        cameraPitch = halfPi;
+    if (cameraPitch < -halfPi)
+        cameraPitch = -halfPi;
+
+    // Wrap yaw
+    if (cameraYaw < 0.0f)
+        cameraYaw += 2.0f * 3.14f;
+    if (cameraYaw > 2.0f * 3.14f)
+        cameraYaw -= 2.0f * 3.14f;
 
     glm::vec3 direction(
         cos(cameraPitch) * sin(cameraYaw),

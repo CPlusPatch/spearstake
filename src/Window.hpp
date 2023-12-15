@@ -12,7 +12,7 @@
 class Spearstake
 {
 public:
-    Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps = 60);
+    Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps = 500);
     ~Spearstake();
 
     void run();

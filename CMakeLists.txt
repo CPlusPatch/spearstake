@@ -20,4 +20,4 @@ link_directories(/usr/lib)
 add_executable(spearstake ${SOURCES})
 
 # Libraries
-target_link_libraries(spearstake GL GLU glfw wayland-client wayland-cursor wayland-egl xkbcommon EGL GLESv2 pthread GLEW SOIL IL)
+target_link_libraries(spearstake GL GLU glfw wayland-client wayland-cursor wayland-egl xkbcommon EGL GLESv2 pthread GLEW)

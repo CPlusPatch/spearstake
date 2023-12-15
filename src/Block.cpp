@@ -47,60 +47,40 @@ void Block::generateGeometry()
 {
     const float blockSize = 1.0f; // Set the size of a single block here
 
-    GLfloat vertices[36 * 3] = {
-        // Front face
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 0
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 1
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 2
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 0
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 2
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 3
+    const int x = this->position.getX();
+    const int y = this->position.getY();
+    const int z = this->position.getZ();
+    const float bs = blockSize;
 
-        // Back face
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 4
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 5
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 6
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 4
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 6
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 7
-
-        // Left face
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 8
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 9
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 10
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 8
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 10
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 11
-
-        // Right face
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 12
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 13
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 14
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 12
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 14
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 15
-
-        // Top face
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 16
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 17
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 18
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 16
-        this->position.getX() + blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 18
-        this->position.getX() - blockSize / 2, this->position.getY() + blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 19
-
-        // Bottom face
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 20
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 21
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 22
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() - blockSize / 2, // Vertex 20
-        this->position.getX() + blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2, // Vertex 22
-        this->position.getX() - blockSize / 2, this->position.getY() - blockSize / 2, this->position.getZ() + blockSize / 2  // Vertex 23
+    GLfloat vertices[8 * 3] = {
+        x - bs / 2, y - bs / 2, z - bs / 2, // Vertex 0
+        x + bs / 2, y - bs / 2, z - bs / 2, // Vertex 1
+        x + bs / 2, y + bs / 2, z - bs / 2, // Vertex 2
+        x - bs / 2, y + bs / 2, z - bs / 2, // Vertex 3
+        x - bs / 2, y - bs / 2, z + bs / 2, // Vertex 4
+        x + bs / 2, y - bs / 2, z + bs / 2, // Vertex 5
+        x + bs / 2, y + bs / 2, z + bs / 2, // Vertex 6
+        x - bs / 2, y + bs / 2, z + bs / 2  // Vertex 7
     };
 
+    GLuint indices[36] = {
+        0, 1, 3, 3, 1, 2, // Front
+        1, 5, 2, 2, 5, 6,
+        5, 4, 6, 6, 4, 7,
+        4, 0, 7, 7, 0, 3,
+        3, 2, 7, 7, 2, 6,
+        4, 5, 0, 0, 5, 1};
+
     // Copy each vertex to this->vertices
-    for (int i = 0; i < 36 * 3; i++)
+    for (int i = 0; i < 8 * 3; i++)
     {
         this->vertices[i] = vertices[i];
+    }
+
+    // Copy each index to this->indices
+    for (int i = 0; i < 36; i++)
+    {
+        this->indices[i] = indices[i];
     }
 
     GLfloat texCoords[36 * 2] = {
@@ -173,6 +153,10 @@ void Block::generateGeometry()
     glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(this->texCoords), this->texCoords, GL_STATIC_DRAW);
 
+    glGenBuffers(1, &indexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(this->indices), this->indices, GL_STATIC_DRAW);
+
     isGenerated = true;
 }
 
@@ -229,8 +213,11 @@ void Block::render(const glm::mat4 &mvpMatrix, const GLuint mvpMatrixID, const G
         (void *)0 // array buffer offset
     );
 
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, 12 * 3); // 12*3 indices starting at 0 -> 12 triangles
+    // Bind the index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+    // Draw the triangles !
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // 36 indices -> 12 triangles
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
