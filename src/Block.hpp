@@ -1,5 +1,5 @@
-#ifndef BLOCK_H
-#define BLOCK_H
+#ifndef BLOCK_HPP
+#define BLOCK_HPP
 
 #include "Position.hpp"
 #include <GL/glew.h>
@@ -28,4 +28,4 @@ private:
     GLfloat texCoords[36 * 2];
 };
 
-#endif // BLOCK_H
+#endif // BLOCK_HPP

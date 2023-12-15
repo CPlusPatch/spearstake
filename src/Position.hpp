@@ -1,5 +1,5 @@
-#ifndef POSITION_H
-#define POSITION_H
+#ifndef POSITION_HPP
+#define POSITION_HPP
 
 #include <glm/glm.hpp>
 
@@ -27,4 +27,4 @@ private:
     float z;
 };
 
-#endif // POSITION_H
+#endif // POSITION_HPP

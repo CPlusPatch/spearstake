@@ -1,5 +1,5 @@
-#ifndef SHADERS_H
-#define SHADERS_H
+#ifndef SHADERS_HPP
+#define SHADERS_HPP
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -7,4 +7,4 @@
 
 GLuint LoadShaders(const char *vertexFilePath, const char *fragmentFilePath);
 
-#endif // SHADERS_H
+#endif // SHADERS_HPP

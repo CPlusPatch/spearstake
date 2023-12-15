@@ -1,5 +1,5 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef WINDOW_HPP
+#define WINDOW_HPP
 
 #include <iostream>
 #include <GL/glew.h>
@@ -39,6 +39,7 @@ private:
     GLuint programID;
     GLuint mvpMatrixID;
     glm::mat4 mvpMatrix;
+    GLuint vertexArrayID;
 };
 
-#endif // WINDOW_H
+#endif // WINDOW_HPP

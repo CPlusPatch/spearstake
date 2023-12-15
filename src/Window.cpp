@@ -17,6 +17,16 @@
 #include "Shaders.hpp"
 
 /**
+ * @brief Wraps a path with the project root directory
+ * @param path The path to wrap
+ * @return The wrapped path
+ */
+std::string wrapPath(const std::string &path)
+{
+    return std::string(get_current_dir_name()) + "/../" + path;
+}
+
+/**
  * @brief Constructor for Spearstake
  * @param dimensions The dimensions of the window
  * @param title The title of the window
@@ -35,6 +45,9 @@ Spearstake::~Spearstake()
     {
         block.~Block();
     }
+
+    // Run cleanup
+    clean();
 }
 
 /**
@@ -110,9 +123,8 @@ void Spearstake::init()
     // Set the clear color
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    glGenVertexArrays(1, &vertexArrayID);
+    glBindVertexArray(vertexArrayID);
 
     programID = LoadShaders("./shaders/vertex.vert", "./shaders/fragment.frag");
 
@@ -131,8 +143,8 @@ void Spearstake::init()
     mvpMatrixID = glGetUniformLocation(programID, "MVP");
 
     // Create blocks
-    blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), "../textures/dirt.png", programID));
-    blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), "../textures/dirt.png", programID));
+    blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
+    blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
     isRunning = true;
 }
 
@@ -214,6 +226,7 @@ void Spearstake::render()
 void Spearstake::clean()
 {
     glDeleteProgram(programID);
+    glDeleteVertexArrays(1, &vertexArrayID);
     // Cleanup GLFW resources
     glfwTerminate();
 }

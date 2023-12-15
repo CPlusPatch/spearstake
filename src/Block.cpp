@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <vector>
 #include <glm/ext/matrix_transform.hpp>
+#include "DDSLoader.hpp"
 
 /**
  * @brief Constructor for Block
@@ -24,71 +25,17 @@
 Block::Block(const Position &position, const char *texture, const GLuint programID) : position(position), programID(programID)
 {
     // Check if texture exists at path, if not, print error message and exit
-    /* if (access(texture, F_OK) == -1)
+    if (access(texture, F_OK) == -1)
     {
         std::cerr << "Texture " << texture << " does not exist" << std::endl;
         exit(1);
-    } */
+    }
 
     // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Load texture data into the texture object
-    ILuint image;
-    ilGenImages(1, &image);
-    ilBindImage(image);
-    ilLoadImage(texture);
-
-    if (ilGetError() != IL_NO_ERROR)
-    {
-        std::cerr << "Error loading texture " << texture << std::endl;
-        exit(1);
-    }
-
-    ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-    int width = ilGetInteger(IL_IMAGE_WIDTH);
-    int height = ilGetInteger(IL_IMAGE_HEIGHT);
-
-    if (width <= 0 || height <= 0)
-    {
-        std::cerr << "Invalid image dimensions for texture " << texture << std::endl;
-        exit(1);
-    }
-
-    unsigned char *imageData = ilGetData();
-    if (!imageData)
-    {
-        std::cerr << "Error getting image data for texture " << texture << std::endl;
-        exit(1);
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+    this->texture = loadDDS(texture);
 
     // Load texture
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-
-    // Bind the texture object
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
     this->textureID = glGetUniformLocation(programID, "myTextureSampler");
-
-    // Validate OpenGL texture
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
-        std::cerr << "Error loading texture " << texture << ": " << gluErrorString(error) << std::endl;
-        exit(1);
-    }
-
-    // Generate mipmaps
-    // glGenerateMipmap(GL_TEXTURE_2D);
-
-    // Clean up DevIL resources
-    ilDeleteImages(1, &image);
 
     float blockSize = 1.0f; // Set the size of a single block here
 
@@ -198,18 +145,22 @@ Block::Block(const Position &position, const char *texture, const GLuint program
         0.0f, 1.0f  // Vertex 23
     };
 
+    // Subtract 1.0f from each V coordinate, because we are using DDS, which is inverted
+    for (int i = 1; i < 36 * 2; i += 2)
+    {
+        texCoords[i] = 1.0f - texCoords[i];
+    }
+
     // Copy each texture coordinate to this->texCoords
     for (int i = 0; i < 36 * 2; i++)
     {
         this->texCoords[i] = texCoords[i];
     }
 
-    vertexBuffer;
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    texCoordBuffer;
     glGenBuffers(1, &texCoordBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
@@ -217,7 +168,10 @@ Block::Block(const Position &position, const char *texture, const GLuint program
 
 Block::~Block()
 {
-    glDeleteTextures(1, &textureID);
+    // Delete buffers and clean up textures
+    glDeleteBuffers(1, &vertexBuffer);
+    glDeleteBuffers(1, &texCoordBuffer);
+    glDeleteTextures(1, &texture);
 }
 
 void Block::update()
