@@ -13,6 +13,12 @@
 #include <vector>
 #include <glm/ext/matrix_transform.hpp>
 
+/**
+ * @brief Constructor for Block
+ * @param position The position of the block
+ * @param texture The path to the texture of the block
+ * @details This constructor initializes the block with the given position and texture
+ */
 Block::Block(const Position &position, const char *texture)
     : position(position)
 {

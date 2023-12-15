@@ -8,6 +8,13 @@
 #include "Position.hpp"
 #include <glm/glm.hpp>
 
+/**
+ * @brief Constructor for Position
+ * @param x The x coordinate of the position
+ * @param y The y coordinate of the position
+ * @param z The z coordinate of the position
+ * @details This constructor initializes the position with the given coordinates
+ */
 Position::Position(const float &x, const float &y, const float &z)
     : x(x), y(y), z(z)
 {

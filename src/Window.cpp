@@ -15,6 +15,13 @@
 #include <vector>
 #include "Shaders.hpp"
 
+/**
+ * @brief Constructor for Spearstake
+ * @param dimensions The dimensions of the window
+ * @param title The title of the window
+ * @param icon The path to the icon of the window
+ * @param targetFps The target FPS of the window (default: 60)
+ */
 Spearstake::Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps)
     : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(4.0f, 3.0f, 3.0f), cameraYaw(0.0f), cameraPitch(0.0f)
 {
@@ -28,6 +35,10 @@ Spearstake::~Spearstake()
     delete block; // Free the allocated memory for the Block object
 }
 
+/**
+ * @brief Runs the window
+ * @details Runs the window and renders it
+ */
 void Spearstake::run()
 {
     init();
@@ -41,6 +52,10 @@ void Spearstake::run()
     clean();
 }
 
+/**
+ * @brief Initializes the window and OpenGL
+ * @details Initializes GLFW and GLEW, and creates the window
+ */
 void Spearstake::init()
 {
     // Initialize GLFW
