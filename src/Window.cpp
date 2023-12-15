@@ -186,8 +186,8 @@ void Spearstake::init()
     mvpMatrixID = glGetUniformLocation(programID, "MVP");
 
     // Create blocks
-    blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), wrapPath("textures/uvtemplate.DDS").c_str(), programID));
-    // blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
+    blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), wrapPath("textures/dirt.DDS").c_str(), programID));
+    blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), wrapPath("textures/dirt.DDS").c_str(), programID));
     isRunning = true;
 }
 

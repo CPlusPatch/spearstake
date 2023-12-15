@@ -20,7 +20,7 @@
  * @param programID The ID of the shader program
  * @details This constructor initializes the block with the given position and texture
  */
-Block::Block(const Position &position, const char *texturePath, const GLuint programID) : position(position), programID(programID), isGenerated(false)
+Block::Block(const Position &position, const char *texturePath, const GLuint programID) : isGenerated(false), position(position), programID(programID)
 {
     // Check if texture exists at path, if not, print error message and exit
     if (access(texturePath, F_OK) == -1)
