@@ -30,7 +30,7 @@ private:
     std::string WINDOW_ICON;
     int TARGET_FPS;
 
-    Block *block;
+    std::vector<Block> blocks; // Dynamic array of Block instances
 
     glm::vec3 cameraPosition;
     float cameraYaw;

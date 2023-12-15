@@ -10,16 +10,22 @@
 class Block
 {
 public:
-    Block(const Position &position, const char *texture);
+    Block(const Position &position, const char *texture, const GLuint programID);
     ~Block();
 
     void update();
-    void render(const glm::mat4 &viewMatrix);
+    void render(const glm::mat4 &mvpMatrix);
     Position getPosition();
 
 private:
     Position position;
+    GLuint programID;
     GLuint textureID;
+    GLuint texture;
+    GLuint vertexBuffer;
+    GLuint texCoordBuffer;
+    GLfloat vertices[36 * 3];
+    GLfloat texCoords[36 * 2];
 };
 
 #endif // BLOCK_H
