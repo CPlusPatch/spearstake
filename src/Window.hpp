@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include <glm/glm.hpp>
-#include "Block.h"
+#include "Block.hpp"
 #include <vector>
 
 class Spearstake

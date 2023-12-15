@@ -4,7 +4,7 @@
  * @details This file contains the implementation of the Block class
  */
 
-#include "Block.h"
+#include "Block.hpp"
 #include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

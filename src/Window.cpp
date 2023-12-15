@@ -5,15 +5,15 @@
  * @details This file contains the class for the Spearstake window renderer
  */
 
-#include "Window.h"
+#include "Window.hpp"
 #include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <unistd.h>
-#include "Block.h"
+#include "Block.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
-#include "Shaders.h"
+#include "Shaders.hpp"
 
 Spearstake::Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps)
     : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(4.0f, 3.0f, 3.0f), cameraYaw(0.0f), cameraPitch(0.0f)

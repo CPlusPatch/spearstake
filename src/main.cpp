@@ -6,7 +6,7 @@
  */
 
 #include <iostream>
-#include "Window.h"
+#include "Window.hpp"
 
 // Window dimensions
 const int WINDOW_WIDTH = 800;

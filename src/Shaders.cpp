@@ -5,7 +5,7 @@
  * @details This file contains the implementation of the shader loader
  */
 
-#include "Shaders.h"
+#include "Shaders.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <string>

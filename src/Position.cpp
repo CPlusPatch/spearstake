@@ -5,7 +5,7 @@
  * @details This file contains the class for a 3D vector that stores the world position of an object
  */
 
-#include "Position.h"
+#include "Position.hpp"
 #include <glm/glm.hpp>
 
 Position::Position(const float &x, const float &y, const float &z)
