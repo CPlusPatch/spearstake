@@ -14,8 +14,11 @@ public:
     ~Block();
 
     void update();
-    void render(const glm::mat4 &mvpMatrix);
+    void render(const glm::mat4 &mvpMatrix, const GLuint mvpMatrixID, const GLuint textures[]);
+    void generateGeometry();
     Position getPosition();
+
+    bool isGenerated;
 
 private:
     Position position;

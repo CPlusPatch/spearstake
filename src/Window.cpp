@@ -15,6 +15,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include "Shaders.hpp"
+#include "DDSLoader.hpp"
 
 /**
  * @brief Wraps a path with the project root directory
@@ -34,8 +35,9 @@ std::string wrapPath(const std::string &path)
  * @param targetFps The target FPS of the window (default: 60)
  */
 Spearstake::Spearstake(const std::pair<int, int> &dimensions, const std::string &title, const std::string &icon, const int &targetFps)
-    : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(4.0f, 3.0f, 3.0f), cameraYaw(0.0f), cameraPitch(0.0f)
+    : isRunning(false), window(nullptr), WINDOW_DIMENSIONS(dimensions), WINDOW_TITLE(title), WINDOW_ICON(icon), TARGET_FPS(targetFps), cameraPosition(0.0f, 0.0f, 0.0f), cameraYaw(0.0f), cameraPitch(0.0f), cameraFov(45.0f)
 {
+    this->initialFov = cameraFov;
 }
 
 Spearstake::~Spearstake()
@@ -60,7 +62,21 @@ void Spearstake::run()
 
     while (isRunning)
     {
-        update();
+        // Calculate the time it takes to render a frame
+        static double previousFrameTime = glfwGetTime();
+        double currentFrameTime = glfwGetTime();
+        double frameTime = currentFrameTime - previousFrameTime;
+        previousFrameTime = currentFrameTime;
+
+        // Limit the frame rate if necessary
+        const double frameDelay = 1.0 / TARGET_FPS;
+        if (frameTime < frameDelay)
+        {
+            double sleepTime = frameDelay - frameTime;
+            usleep(sleepTime * 1000000);
+        }
+
+        update(frameTime);
         render();
     }
 
@@ -116,12 +132,25 @@ void Spearstake::init()
 
     // Context
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    // Hide the mouse and enable unlimited mouvement
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Set the clear color
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glfwSetCursorPos(window, WINDOW_DIMENSIONS.first / 2, WINDOW_DIMENSIONS.second / 2);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+
+    // Mouse scroll callback
+    glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
+                          {
+        Spearstake *spearstake = (Spearstake *)glfwGetWindowUserPointer(window);
+        spearstake->cameraFov -= yoffset;
+        if (spearstake->cameraFov < 1.0f)
+            spearstake->cameraFov = 1.0f;
+        if (spearstake->cameraFov > 45.0f)
+            spearstake->cameraFov = 45.0f; });
 
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
@@ -131,8 +160,22 @@ void Spearstake::init()
     // Projection matrix
     glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), (float)WINDOW_DIMENSIONS.first / (float)WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
 
+    glm::vec3 direction(
+        cos(cameraPitch) * sin(cameraYaw),
+        sin(cameraPitch),
+        cos(cameraPitch) * cos(cameraYaw));
+
+    // Right vector
+    glm::vec3 right = glm::vec3(
+        sin(cameraYaw - 3.14f / 2.0f),
+        0,
+        cos(cameraYaw - 3.14f / 2.0f));
+
+    // Up vector
+    glm::vec3 up = glm::cross(right, direction);
+
     // View matrix
-    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0f, 0.0f));
+    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraPosition + direction, up);
 
     // Model matrix
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -143,7 +186,7 @@ void Spearstake::init()
     mvpMatrixID = glGetUniformLocation(programID, "MVP");
 
     // Create blocks
-    blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
+    blocks.push_back(Block(Position(0.0f, 0.0f, 0.0f), wrapPath("textures/uvtemplate.DDS").c_str(), programID));
     // blocks.push_back(Block(Position(1.0f, 0.0f, 0.0f), wrapPath("textures/dirt.dds").c_str(), programID));
     isRunning = true;
 }
@@ -151,30 +194,70 @@ void Spearstake::init()
 /**
  * @brief Updates the window
  * @details Listens for keyboard input and updates the window accordingly
+ * @param deltaTime The time it took to render the last frame, in seconds
  */
-void Spearstake::update()
+void Spearstake::update(double deltaTime)
 {
-    // Check for keyboard input
+    float speed = 3.0f;
+    float mouseSpeed = 1.0f;
+
+    // Get mouse position
+    double mouseX, mouseY;
+    glfwGetCursorPos(window, &mouseX, &mouseY);
+
+    // Reset mouse position to center of screen so it cant escape
+    glfwSetCursorPos(window, WINDOW_DIMENSIONS.first / 2, WINDOW_DIMENSIONS.second / 2);
+
+    // Compute new orientation
+    cameraYaw -= mouseSpeed * (float)deltaTime * float(WINDOW_DIMENSIONS.first / 2 - mouseX); // Invert yaw
+    cameraPitch += mouseSpeed * (float)deltaTime * float(WINDOW_DIMENSIONS.second / 2 - mouseY);
+
+    glm::vec3 direction(
+        cos(cameraPitch) * sin(cameraYaw),
+        sin(cameraPitch),
+        cos(cameraPitch) * cos(cameraYaw));
+
+    // Right vector
+    glm::vec3 right = glm::vec3(
+        sin(cameraYaw - 3.14f / 2.0f),
+        0,
+        cos(cameraYaw - 3.14f / 2.0f));
+
+    // Up vector
+    glm::vec3 up = glm::cross(right, direction);
+
+    // Move forward
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        // Move camera forward
-        cameraPosition += glm::vec3(0.0f, 0.0f, -0.1f);
+        cameraPosition += direction * (float)deltaTime * speed;
     }
+    // Move backward
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        // Move camera backward
-        cameraPosition += glm::vec3(0.0f, 0.0f, 0.1f);
+        cameraPosition -= direction * (float)deltaTime * speed;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        // Rotate camera left
-        cameraYaw -= 1.0f;
-    }
+    // Strafe right
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        // Rotate camera right
-        cameraYaw += 1.0f;
+        cameraPosition += right * (float)deltaTime * speed;
     }
+    // Strafe left
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        cameraPosition -= right * (float)deltaTime * speed;
+    }
+
+    // Compute matrices
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(cameraFov), (float)WINDOW_DIMENSIONS.first / (float)WINDOW_DIMENSIONS.second, 0.1f, 100.0f);
+
+    glm::mat4 viewMatrix = glm::lookAt(
+        cameraPosition,
+        cameraPosition + direction,
+        up);
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
 
     // Handle escape key
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -190,31 +273,19 @@ void Spearstake::update()
  */
 void Spearstake::render()
 {
-    // Calculate the time it takes to render a frame
-    static double previousFrameTime = glfwGetTime();
-    double currentFrameTime = glfwGetTime();
-    double frameTime = currentFrameTime - previousFrameTime;
-    previousFrameTime = currentFrameTime;
-
-    // Limit the frame rate if necessary
-    const double frameDelay = 1.0 / TARGET_FPS;
-    if (frameTime < frameDelay)
-    {
-        double sleepTime = frameDelay - frameTime;
-        usleep(sleepTime * 1000000);
-    }
-
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(programID);
+    GLuint Texture = loadDDS("../textures/dirt.DDS");
 
-    glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
+    const GLuint textures[] = {Texture};
 
     // Render blocks
     for (Block &block : blocks)
     {
-        block.render(mvpMatrix);
+        if (!block.isGenerated)
+            block.generateGeometry();
+        block.render(mvpMatrix, mvpMatrixID, textures);
     }
 
     // Swap buffers

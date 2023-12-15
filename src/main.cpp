@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include "Window.hpp"
-#include <IL/il.h>
 
 // Window dimensions
 const int WINDOW_WIDTH = 800;
@@ -19,8 +18,6 @@ int main()
 {
     // Print hello world
     std::cout << "Starting Spearstake..." << std::endl;
-
-    ilInit();
 
     // Create a Spearstake object
     Spearstake spearstake(WINDOW_DIMENSIONS, WINDOW_TITLE, "");

@@ -19,7 +19,7 @@ public:
 
 private:
     void init();
-    void update();
+    void update(double deltaTime);
     void render();
     void clean();
 
@@ -35,6 +35,8 @@ private:
     glm::vec3 cameraPosition;
     float cameraYaw;
     float cameraPitch;
+    float cameraFov;
+    float initialFov;
 
     GLuint programID;
     GLuint mvpMatrixID;
